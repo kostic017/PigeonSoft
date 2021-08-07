@@ -31,22 +31,16 @@ namespace Kostic017.Pigeon
             return -1;
         }
 
-        public static void PrintTree(this IParseTree tree, TextWriter writer, string[] ruleNames, string indent = "", bool isLastChild = true)
+        public static void PrintTree(this IParseTree tree, TextWriter writer, Parser parser, string indent = "", bool isLastChild = true)
         {
-            writer.Write(indent);
-            writer.Write(isLastChild ? "└──" : "├──");
-            writer.Write(" ");
-
-            indent += isLastChild ? "    " : "│   ";
+            writer.Write(indent + (isLastChild ? "└──" : "├──") + " ");
 
             SetOutputColor(writer, tree);
-            writer.Write(Trees.GetNodeText(tree, ruleNames));
+            writer.WriteLine(Trees.GetNodeText(tree, parser));
             ResetOutputColor(writer);
-
-            writer.WriteLine();
-
+            
             for (int i = 0; i < tree.ChildCount; i++)
-                PrintTree(tree.GetChild(i), writer, ruleNames, indent, i == tree.ChildCount - 1);
+                PrintTree(tree.GetChild(i), writer, parser, indent + (isLastChild ? "    " : "│   "), i == tree.ChildCount - 1);
         }
 
         private static void SetOutputColor(TextWriter writer, IParseTree tree)

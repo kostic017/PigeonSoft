@@ -47,7 +47,7 @@ namespace Kostic017.Pigeon
 
         public void PrintTree(TextWriter writer)
         {
-            tree.PrintTree(writer, parser.RuleNames);
+            tree.PrintTree(writer, parser);
         }
 
         public bool HasNoErrors()

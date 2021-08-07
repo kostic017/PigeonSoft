@@ -69,7 +69,7 @@ namespace TestProject
                     printTree = !printTree;
                     break;
                 default:
-                    Console.WriteLine($"Valid commands: #list, #exec [file], #cls");
+                    Console.WriteLine($"Valid commands: #list, #exec [file], #cls, #tree");
                     break;
             }
 
