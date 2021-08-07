@@ -34,14 +34,14 @@ namespace Kostic017.Pigeon
             functionScopes.Push(new FunctionScope(analyser.GlobalScope));
 
             foreach (var stmt in context.stmt())
-                VisitStmt(stmt);
+                Visit(stmt);
             
             return null;
         }
 
         public override object VisitParenthesizedExpression([NotNull] PigeonParser.ParenthesizedExpressionContext context)
         {
-            return VisitExpr(context.expr());
+            return Visit(context.expr());
         }
 
         public override object VisitBoolLiteral([NotNull] PigeonParser.BoolLiteralContext context)
@@ -63,7 +63,7 @@ namespace Kostic017.Pigeon
 
         public override object VisitUnaryExpression([NotNull] PigeonParser.UnaryExpressionContext context)
         {
-            var operand = VisitExpr(context.expr());
+            var operand = Visit(context.expr());
             var resType = analyser.Types.Get(context);
             switch (context.op.Text)
             {
@@ -84,8 +84,8 @@ namespace Kostic017.Pigeon
 
         public override object VisitBinaryExpression([NotNull] PigeonParser.BinaryExpressionContext context)
         {
-            var left = VisitExpr(context.expr(0));
-            var right = VisitExpr(context.expr(1));
+            var left = Visit(context.expr(0));
+            var right = Visit(context.expr(1));
             var resType = analyser.Types.Get(context);
 
             var areBothInt =
@@ -159,14 +159,14 @@ namespace Kostic017.Pigeon
 
         public override object VisitFunctionCallExpression([NotNull] PigeonParser.FunctionCallExpressionContext context)
         {
-            return VisitFunctionCall(context.functionCall());
+            return Visit(context.functionCall());
         }
 
         public override object VisitTernaryExpression([NotNull] PigeonParser.TernaryExpressionContext context)
         {
-            var condition = VisitExpr(context.expr(0));
-            var whenTrue = VisitExpr(context.expr(1));
-            var whenFalse = VisitExpr(context.expr(2));
+            var condition = Visit(context.expr(0));
+            var whenTrue = Visit(context.expr(1));
+            var whenFalse = Visit(context.expr(2));
             return (bool) condition ? whenTrue : whenFalse;
         }
 
@@ -177,10 +177,10 @@ namespace Kostic017.Pigeon
 
         public override object VisitIfStatement([NotNull] PigeonParser.IfStatementContext context)
         {
-            if ((bool) VisitExpr(context.expr()))
-                VisitStmtBlock(context.stmtBlock(0));
+            if ((bool)Visit(context.expr()))
+                Visit(context.stmtBlock(0));
             else if (context.stmtBlock(1) != null)
-                VisitStmtBlock(context.stmtBlock(1));
+                Visit(context.stmtBlock(1));
             return null;
         }
 
@@ -192,7 +192,7 @@ namespace Kostic017.Pigeon
             {
                 foreach (var statement in context.stmt())
                 {
-                    var r = VisitStmt(statement);
+                    var r = Visit(statement);
                     if (statement is PigeonParser.ContinueStatementContext)
                         throw new ContinueLoopException();
                     if (statement is PigeonParser.BreakStatementContext)
@@ -214,7 +214,7 @@ namespace Kostic017.Pigeon
             do
                 try
                 {
-                    VisitStmtBlock(context.stmtBlock());
+                    Visit(context.stmtBlock());
                 }
                 catch (BreakLoopException)
                 {
@@ -223,16 +223,16 @@ namespace Kostic017.Pigeon
                 catch (ContinueLoopException)
                 {
                 }
-            while ((bool) VisitExpr(context.expr()));
+            while ((bool)Visit(context.expr()));
             return null;
         }
 
         public override object VisitWhileStatement([NotNull] PigeonParser.WhileStatementContext context)
         {
-            while ((bool) VisitExpr(context.expr()))
+            while ((bool)Visit(context.expr()))
                 try
                 {
-                    VisitStmtBlock(context.stmtBlock());
+                    Visit(context.stmtBlock());
                 }
                 catch (BreakLoopException)
                 {
@@ -246,8 +246,8 @@ namespace Kostic017.Pigeon
 
         public override object VisitForStatement([NotNull] PigeonParser.ForStatementContext context)
         {
-            var startValue = (int) VisitExpr(context.expr(0));
-            var targetValue = (int) VisitExpr(context.expr(1));
+            var startValue = (int)Visit(context.expr(0));
+            var targetValue = (int)Visit(context.expr(1));
             var counter = context.ID().GetText();
             var isIncrementing = context.dir.Text == "to";
             var i = startValue;
@@ -259,7 +259,7 @@ namespace Kostic017.Pigeon
             {
                 try
                 {
-                    VisitStmtBlock(context.stmtBlock());
+                    Visit(context.stmtBlock());
                     functionScopes.Peek().ExitScope();
                     functionScopes.Peek().EnterScope();
                     Declare(PigeonType.Int, counter, i);
@@ -273,31 +273,31 @@ namespace Kostic017.Pigeon
                 }
                 i += isIncrementing ? 1 : -1;
                 Assign(counter, i);
-                targetValue = (int) VisitExpr(context.expr(1));
+                targetValue = (int)Visit(context.expr(1));
             }
             return null;
         }
 
         public override object VisitFunctionCallStatement([NotNull] PigeonParser.FunctionCallStatementContext context)
         {
-            return VisitFunctionCall(context.functionCall());
+            return Visit(context.functionCall());
         }
 
         public override object VisitReturnStatement([NotNull] PigeonParser.ReturnStatementContext context)
         {
-            return context.expr() != null ? VisitExpr(context.expr()) : null;
+            return context.expr() != null ? Visit(context.expr()) : null;
         }
 
         public override object VisitVariableAssignmentStatement([NotNull] PigeonParser.VariableAssignmentStatementContext context)
         {
-            return VisitVarAssign(context.varAssign());
+            return Visit(context.varAssign());
         }
 
         public override object VisitVariableDeclarationStatement([NotNull] PigeonParser.VariableDeclarationStatementContext context)
         {
             var name = context.varDecl().ID().GetText();
             var type = analyser.Types.Get(context.varDecl().expr());
-            var value = VisitExpr(context.varDecl().expr());
+            var value = Visit(context.varDecl().expr());
             Declare(type, name, value);
             return null;
         }
@@ -306,7 +306,7 @@ namespace Kostic017.Pigeon
         {
             var name = context.ID().GetText();
             var type = analyser.Types.Get(context.expr());
-            var value = VisitExpr(context.expr());
+            var value = Visit(context.expr());
             var currentValue = functionScopes.Peek().Evaluate(name);
 
             switch (context.op.Text)
@@ -361,7 +361,7 @@ namespace Kostic017.Pigeon
 
             if (context.functionArgs() != null)
                 foreach (var arg in context.functionArgs().expr())
-                    argValues.Add(VisitExpr(arg));
+                    argValues.Add(Visit(arg));
 
             if (function.FuncBody is FuncPointer fp)
                 return fp(argValues.ToArray());
@@ -374,7 +374,7 @@ namespace Kostic017.Pigeon
 
             try
             {
-                return VisitStmtBlock(funcBody);
+                return Visit(funcBody);
             }
             catch (FuncReturnValueException e)
             {
@@ -384,54 +384,6 @@ namespace Kostic017.Pigeon
             {
                 functionScopes.Pop();
             }
-        }
-
-        public override object VisitStmt([NotNull] PigeonParser.StmtContext context)
-        {
-            if (context is PigeonParser.IfStatementContext ctxi)
-                return VisitIfStatement(ctxi);
-            if (context is PigeonParser.DoWhileStatementContext ctxd)
-                return VisitDoWhileStatement(ctxd);
-            if (context is PigeonParser.WhileStatementContext ctxw)
-                return VisitWhileStatement(ctxw);
-            if (context is PigeonParser.ForStatementContext ctxf)
-                return VisitForStatement(ctxf);
-            if (context is PigeonParser.FunctionCallStatementContext ctxfu)
-                return VisitFunctionCallStatement(ctxfu);
-            if (context is PigeonParser.ReturnStatementContext ctxr)
-                return VisitReturnStatement(ctxr);
-            if (context is PigeonParser.VariableAssignmentStatementContext ctxv)
-                return VisitVariableAssignmentStatement(ctxv);
-            if (context is PigeonParser.VariableDeclarationStatementContext ctxvd)
-                return VisitVariableDeclarationStatement(ctxvd);
-            if (context is PigeonParser.BreakStatementContext)
-                return null;
-            if (context is PigeonParser.ContinueStatementContext)
-                return null;
-            throw new InternalErrorException($"Unsupported statement type {context.GetType().Name}");
-        }
-
-        public override object VisitExpr([NotNull] PigeonParser.ExprContext context)
-        {
-            if (context is PigeonParser.ParenthesizedExpressionContext ctxp)
-                return VisitParenthesizedExpression(ctxp);
-            if (context is PigeonParser.BoolLiteralContext ctxb)
-                return VisitBoolLiteral(ctxb);
-            if (context is PigeonParser.StringLiteralContext ctxs)
-                return VisitStringLiteral(ctxs);
-            if (context is PigeonParser.NumberLiteralContext ctxn)
-                return VisitNumberLiteral(ctxn);
-            if (context is PigeonParser.UnaryExpressionContext ctxu)
-                return VisitUnaryExpression(ctxu);
-            if (context is PigeonParser.BinaryExpressionContext ctxbi)
-                return VisitBinaryExpression(ctxbi);
-            if (context is PigeonParser.FunctionCallExpressionContext ctxf)
-                return VisitFunctionCallExpression(ctxf);
-            if (context is PigeonParser.TernaryExpressionContext ctxt)
-                return VisitTernaryExpression(ctxt);
-            if (context is PigeonParser.VariableExpressionContext ctxv)
-                return VisitVariableExpression(ctxv);
-            throw new InternalErrorException($"Unsupported expression type {context.GetType().Name}");
         }
 
         private void Declare(PigeonType type, string name, object value)
